@@ -1,15 +1,27 @@
-function getLink(){
+function getLink(t){
 	return new Promise(function(resolve) {
 		var data = new FormData();
 		data.append('exclude', [""]);
 		var xhr = new XMLHttpRequest();
-		xhr.open('POST', 'https://api.waifu.pics/many/sfw/waifu', true);
+		xhr.open('POST', 'https://api.waifu.pics/many/sfw/' + t, true);
 		xhr.onload = function () {
 			files = JSON.parse(this.responseText)["files"]
 			resolve(files[0]);
 		};
 		xhr.send(data);
 	})
+}
+async function rStr(s) {
+	return new Promise( async (resolve) => {
+		const re = /((waifu|neko|shinobu|megumin|bully|cuddle|cry|hug|awoo|kiss|lick|pat|smug|bonk|yeet|blush|smile|wave|highfive|handhold|nom|bite|glomp|slap|kill|kick|happy|wink|poke|dance|cringe)-link)/g;
+		let match;
+		let link;
+		while ((match = re.exec(s)) !== null) {
+			link = await getLink(match[2]);
+			s = s.replace(match[1], link);
+		}
+		resolve(s);
+	});
 }
 
 (function () {
@@ -41,10 +53,9 @@ function getLink(){
 	var wsSend = OrigWebSocket.prototype.send;
 	wsSend = wsSend.apply.bind(wsSend);
 	OrigWebSocket.prototype.send = function (data) {
-		if (data.includes("waifu-link")){
+		if (data.includes("-link")){
 			var msgC = async (b, a) => {
-				var link = await getLink();
-				a[0] = a[0].replace("waifu-link", link);
+				a[0] = await rStr(a[0]);
 				return wsSend(b, a);
 			}
 			msgC(this, arguments);
