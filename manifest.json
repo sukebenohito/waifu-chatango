@@ -1,0 +1,26 @@
+{
+	"name": "waifu-chatango",
+	"version": "0.0.1",
+	"manifest_version": 3,
+	"description": "replace any 'waifu-link' with actual image url in chatango", 
+	"content_scripts": [
+		{
+			"matches": [
+				"https://st.chatango.com/*/id.html",
+				"http://st.chatango.com/*/id.html"
+			],
+			"js": [
+				"js/app.js"
+			],
+			"run_at": "document_start",
+			"all_frames": true      
+		}
+	],
+	"web_accessible_resources": [
+		{ 
+			"resources": ["js/waifu.js"],
+			"matches": ["<all_urls>"]
+		}
+	]
+	
+}
