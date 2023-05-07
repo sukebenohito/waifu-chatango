@@ -7,7 +7,8 @@ open your chrome browser
 go to More tools > Extensions 
 
 toggle your "Developer mode" > Load unpacked
-choice ( folder name )* where you unzip this repo github
+
+choice folder name (folder name should be "waifu-chatango-main")* where you unzip this repo github
 
 
 type waifu-link in your chat 
