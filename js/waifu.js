@@ -63,7 +63,7 @@ WebSocket.prototype.send = function(...args) {
 	if (args[0].includes("-link")){
 		var msgC = async (b, ...a) => {
 			a[0] = await rStr(a[0]);
-			console.log("Sent:", this.url, a[0]);
+			//console.log("Sent:", this.url, a[0]);
 			return originalSend.call(b, ...a);
 		}
 		msgC(this, ...args);
