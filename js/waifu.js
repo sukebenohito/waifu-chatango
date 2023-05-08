@@ -1,9 +1,11 @@
-function getLink(t){
+function getLink(sfwImage, typeImage){
 	return new Promise(function(resolve) {
+		var url = 'https://api.waifu.pics/many/'+ sfwImage + '/' + typeImage
+		console.log(url);
 		var data = new FormData();
 		data.append('exclude', [""]);
 		var xhr = new XMLHttpRequest();
-		xhr.open('POST', 'https://api.waifu.pics/many/sfw/' + t, true);
+		xhr.open('POST', url, true);
 		xhr.onload = function () {
 			files = JSON.parse(this.responseText)["files"]
 			resolve(files[0]);
@@ -11,58 +13,65 @@ function getLink(t){
 		xhr.send(data);
 	})
 }
-async function rStr(s) {
+
+async function getLink2(sfwImage, typeImage){
+	url = 'https://api.waifu.pics/many/'+ sfwImage + '/' + typeImage;
+	const response = await fetch(url, {
+		method: "POST", 
+		body: JSON.stringify({
+			exclude : []
+		}),
+		headers: {
+			'Content-type': 'application/json; charset=UTF-8'
+		}
+	});
+	let files = await response.json();
+	return files.files[0]
+}
+
+function rStr(s) {
 	return new Promise( async (resolve) => {
-		const re = /((waifu|neko|shinobu|megumin|bully|cuddle|cry|hug|awoo|kiss|lick|pat|smug|bonk|yeet|blush|smile|wave|highfive|handhold|nom|bite|glomp|slap|kill|kick|happy|wink|poke|dance|cringe)-link)/g;
+		const re = /((nsfw-|)(waifu|neko|shinobu|megumin|bully|cuddle|cry|hug|awoo|kiss|lick|pat|smug|bonk|yeet|blush|smile|wave|highfive|handhold|nom|bite|glomp|slap|kill|kick|happy|wink|poke|dance|cringe)-link)/g;
 		let match;
 		let link;
 		while ((match = re.exec(s)) !== null) {
-			link = await getLink(match[2]);
+			if (match[2] === "nsfw-"){
+				link = await getLink("nsfw", match[3]);
+			}
+			else{
+				link = await getLink("sfw", match[3]);
+			}
 			s = s.replace(match[1], link);
 		}
 		resolve(s);
+		
 	});
 }
 
-(function () {
-	var OrigWebSocket = window.WebSocket;
-	var callWebSocket = OrigWebSocket.apply.bind(OrigWebSocket);
-	var wsAddListener = OrigWebSocket.prototype.addEventListener;
-	wsAddListener = wsAddListener.call.bind(wsAddListener);
-	window.WebSocket = function WebSocket(url, protocols) {
-		var ws;
-		if (!(this instanceof WebSocket)) {
-		// Called without 'new' (browsers will throw an error).
-			ws = callWebSocket(this, arguments);
-		} else if (arguments.length === 1) {
-			ws = new OrigWebSocket(url);
-		} else if (arguments.length >= 2) {
-			ws = new OrigWebSocket(url, protocols);
-		} else { // No arguments (browsers will throw an error)
-			ws = new OrigWebSocket();
+const originalSend = WebSocket.prototype.send;
+window.sockets = [];
+
+WebSocket.prototype.send = function(...args) {
+	
+	if (window.sockets.indexOf(this) === -1){
+		window.sockets.push(this);
+		this.addEventListener("message", (e) => {
+			//console.log("Receive:", this.url, e.data)
+		});
 	}
 
-	wsAddListener(ws, 'message', function(event) {
-		//console.log("Received:", event);
-	});
-	return ws;
-	}.bind();
-	window.WebSocket.prototype = OrigWebSocket.prototype;
-	window.WebSocket.prototype.constructor = window.WebSocket;
+	if (args[0].includes("-link")){
+		var msgC = async (b, ...a) => {
+			a[0] = await rStr(a[0]);
+			console.log("Sent:", this.url, a[0]);
+			return originalSend.call(b, ...a);
+		}
+		msgC(this, ...args);
+	}
+	else {	
+		//console.log("Sent:", this.url, args[0]);
+		return originalSend.call(this, ...args);
+	}
+	
+};
 
-	var wsSend = OrigWebSocket.prototype.send;
-	wsSend = wsSend.apply.bind(wsSend);
-	OrigWebSocket.prototype.send = function (data) {
-		if (data.includes("-link")){
-			var msgC = async (b, a) => {
-				a[0] = await rStr(a[0]);
-				return wsSend(b, a);
-			}
-			msgC(this, arguments);
-		}
-		else{
-			//console.log("Sent:", data);
-			return wsSend(this, arguments);
-		}
-	};
-})();
