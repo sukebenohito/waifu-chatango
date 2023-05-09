@@ -1,10 +1,10 @@
-function getLink(sfwImage, typeImage){
+function getLink(sfwImage, typeImage){ 
 	return new Promise(function(resolve) {
 		var url = 'https://api.waifu.pics/many/'+ sfwImage + '/' + typeImage
-		console.log(url);
+		//console.log(url);
 		var data = new FormData();
 		data.append('exclude', [""]);
-		var xhr = new XMLHttpRequest();
+		var xhr = new XMLHttpRequest();  // yes i know im old
 		xhr.open('POST', url, true);
 		xhr.onload = function () {
 			files = JSON.parse(this.responseText)["files"]
@@ -14,7 +14,7 @@ function getLink(sfwImage, typeImage){
 	})
 }
 
-async function getLink2(sfwImage, typeImage){
+async function getLink2(sfwImage, typeImage){ // heh :v
 	url = 'https://api.waifu.pics/many/'+ sfwImage + '/' + typeImage;
 	const response = await fetch(url, {
 		method: "POST", 
@@ -48,17 +48,30 @@ function rStr(s) {
 	});
 }
 
-const originalSend = WebSocket.prototype.send;
-window.sockets = [];
 
+window.sockets = []; // you don't need this but idk why i still put it
+
+const originalSend = WebSocket.prototype.send;
 WebSocket.prototype.send = function(...args) {
 	
-	if (window.sockets.indexOf(this) === -1){
-		window.sockets.push(this);
-		this.addEventListener("message", (e) => {
-			//console.log("Receive:", this.url, e.data)
-		});
+	if (window.sockets.indexOf(this) === -1){ // you don't need this but idk why i still put it
+		window.sockets.push(this); // you don't need this but idk why i still put it
+	
+		let originalOnMessage = this.onmessage;
+		this.onmessage = function(message){
+			var oriMessage = message;
+			var newMessage = new MessageEvent('message', {
+				data: oriMessage.data, // you can now changing the data
+				origin: oriMessage.origin,
+				bubbles: oriMessage.bubbles,
+				cancelable: oriMessage.cancelable,
+				composed: oriMessage.composed
+			});
+			//console.log(newMessage.data);
+			return originalOnMessage.call(this, newMessage);
+		}
 	}
+
 
 	if (args[0].includes("-link")){
 		var msgC = async (b, ...a) => {
@@ -69,6 +82,7 @@ WebSocket.prototype.send = function(...args) {
 		msgC(this, ...args);
 	}
 	else {	
+		
 		//console.log("Sent:", this.url, args[0]);
 		return originalSend.call(this, ...args);
 	}
