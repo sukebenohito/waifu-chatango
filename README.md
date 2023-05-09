@@ -12,3 +12,4 @@ choice folder name (folder name should be "waifu-chatango-main")* where you unzi
 
 
 type waifu-link in your chat 
+any string or word will replace with actual url of picture of anime tidies
